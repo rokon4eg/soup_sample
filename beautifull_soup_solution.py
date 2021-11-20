@@ -61,6 +61,10 @@ def parse(path_to_file):
         if links > linkslen:
             linkslen = links
 
+    for s in soup_div_bodyContent.find_all(['ul','ol']):
+        if s.find_parents(['ul','ol']) == []: lists += 1
+
+
     return [imgs, headers, linkslen, lists]
 
 
