@@ -1,4 +1,6 @@
-import datetime
+import os
+from os.path import isfile
+from pprint import pprint
 import re
 
 from bs4 import BeautifulSoup
@@ -72,12 +74,30 @@ class TestParse(unittest.TestCase):
             with self.subTest(path=path, expected=expected):
                 self.assertEqual(parse(path), expected)
 
+def get_links(path, page):
+    with open(os.path.join(path, page), encoding="utf-8") as file:
+        all_links = re.findall(r"(?<=/wiki/)[\w()]+", file.read())
+        print(all_links)
+        links = []
+        [links.append(link) for link in all_links if (isfile(os.path.join(path, link)) and (link not in links))]
+
+        links = links
+        print(links)
+    return links
+
 
 def build_bridge(path, start_page, end_page):
     """возвращает список страниц, по которым можно перейти по ссылкам со start_page на
     end_page, начальная и конечная страницы включаются в результирующий список"""
 
     # напишите вашу реализацию логики по вычисления кратчайшего пути здесь
+    short_path = [start_page]
+    page = start_page
+
+    short_path = get_links(path, page)
+
+
+    return short_path
 
 
 def get_statistics(path, start_page, end_page):
@@ -87,14 +107,24 @@ def get_statistics(path, start_page, end_page):
     # получаем список страниц, с которых необходимо собрать статистику
     pages = build_bridge(path, start_page, end_page)
     # напишите вашу реализацию логики по сбору статистики здесь
-
+    statistic = {}
+    for page in pages:
+        statistic.setdefault(page, parse(path+page))
     return statistic
 
 
 if __name__ == '__main__':
-    time_start = datetime.datetime.now()
-    unittest.main()
+    # time_start = datetime.datetime.now()
+    # unittest.main()
     # print(parse('wiki/Stone_Age'))
-    time_end = datetime.datetime.now()
-    time_work = time_end - time_start
-    print("TIME =", time_work)
+    result = build_bridge('wiki/', 'The_New_York_Times', 'Stone_Age')
+    print(result)
+    # ['The_New_York_Times', 'London', 'Woolwich', 'Iron_Age', 'Stone_Age']
+
+    # result = get_statistics('wiki/', 'The_New_York_Times', "Binyamina_train_station_suicide_bombing")
+    # pprint(result)
+    #
+    # {'Binyamina_train_station_suicide_bombing': [1, 3, 6, 21],
+    #  'Haifa_bus_16_suicide_bombing': [1, 4, 15, 23],
+    #  'Second_Intifada': [9, 13, 14, 84],
+    #  'The_New_York_Times': [5, 9, 8, 42]}
