@@ -15,7 +15,8 @@ def count_tag_a(tag):
         if tag.name == 'a':
             links += 1
             tag = tag.find_next_sibling()
-        else: tag = None
+        else:
+            tag = None
     return links
 
 
@@ -55,8 +56,8 @@ def parse(path_to_file):
         if links > linkslen:
             linkslen = links
 
-    for s in soup_div_bodyContent.find_all(['ul','ol']):
-        if s.find_parents(['ul','ol']) == []: lists += 1
+    for s in soup_div_bodyContent.find_all(['ul', 'ol']):
+        if s.find_parents(['ul', 'ol']) == []: lists += 1
 
     return [imgs, headers, linkslen, lists]
 
@@ -74,16 +75,18 @@ class TestParse(unittest.TestCase):
             with self.subTest(path=path, expected=expected):
                 self.assertEqual(parse(path), expected)
 
+
 def get_links(path, page):
+    links = []
     with open(os.path.join(path, page), encoding="utf-8") as file:
         all_links = re.findall(r"(?<=/wiki/)[\w()]+", file.read())
-        print(all_links)
-        links = []
-        [links.append(link) for link in all_links if (isfile(os.path.join(path, link)) and (link not in links))]
-
-        links = links
-        print(links)
-    return links
+        for link in all_links:
+            if (isfile(os.path.join(path, link))
+                    and (link not in links)
+                    and (link != page)
+            ):
+                links.append(link)
+        return links
 
 
 def build_bridge(path, start_page, end_page):
@@ -92,10 +95,30 @@ def build_bridge(path, start_page, end_page):
 
     # напишите вашу реализацию логики по вычисления кратчайшего пути здесь
     short_path = [start_page]
-    page = start_page
+    links_viewed = set()
+    level = 0
+    link_level = dict() # cсылка = путь
+    link_level.setdefault(start_page, [start_page])
+    queue = [start_page]
+    while queue:
+        page = queue.pop(0)
+        links_viewed.add(page)
+        # level = link_level.get(page, 0)
+        links = get_links(path, page)
+        if end_page in links:
+            return(link_level.get(page)+[end_page])
+        else:
+            for link in links:
+                if link not in links_viewed:
+                    queue.append(link)
+                    link_level.setdefault(link, link_level.get(page, [])+[link])
+    # print(link_level)
 
-    short_path = get_links(path, page)
 
+    #     matrix.setdefault(link, get_links(path, link))
+    # for m in matrix.items():
+    #     print(m)
+    # # short_path = get_links(path, page)
 
     return short_path
 
@@ -109,7 +132,7 @@ def get_statistics(path, start_page, end_page):
     # напишите вашу реализацию логики по сбору статистики здесь
     statistic = {}
     for page in pages:
-        statistic.setdefault(page, parse(path+page))
+        statistic.setdefault(page, parse(path + page))
     return statistic
 
 
@@ -121,8 +144,8 @@ if __name__ == '__main__':
     print(result)
     # ['The_New_York_Times', 'London', 'Woolwich', 'Iron_Age', 'Stone_Age']
 
-    # result = get_statistics('wiki/', 'The_New_York_Times', "Binyamina_train_station_suicide_bombing")
-    # pprint(result)
+    result = get_statistics('wiki/', 'The_New_York_Times', "Binyamina_train_station_suicide_bombing")
+    pprint(result)
     #
     # {'Binyamina_train_station_suicide_bombing': [1, 3, 6, 21],
     #  'Haifa_bus_16_suicide_bombing': [1, 4, 15, 23],
