@@ -24,23 +24,15 @@ def parse(path_to_file):
     # encoding='utf-8', его отсутствие в коде будет вызвать падение вашего
     # решения на грейдере с ошибкой UnicodeDecodeError
     with open(path_to_file, encoding='utf-8') as file:
-        # file_context = file.read()
         soup = BeautifulSoup(file, 'lxml')
     soup_div_bodyContent = soup.find('div', id='bodyContent')
     imgs = headers = linkslen = lists = 0
-    tags_list = ['img']
     h1_h6 = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
-    tags_list += h1_h6
     for s in soup_div_bodyContent.find_all('img'):
         if int(s.get("width", 0)) > 199: imgs += 1
-    for s in soup_div_bodyContent.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
+    for s in soup_div_bodyContent.find_all(h1_h6):
         if re.match('[ETC]', s.text): headers += 1
 
-    # for s in soup_div_bodyContent.find_all(tags_list):
-    #     if s.name == 'img':
-    #         if int(s.get("width", 0)) > 199: imgs += 1
-    #     elif s.name in h1_h6:
-    #         if re.match('[ETC]', s.text): headers += 1
     pass
     # не очень хороший способ -------------
     # is_count = True
@@ -63,7 +55,6 @@ def parse(path_to_file):
 
     for s in soup_div_bodyContent.find_all(['ul','ol']):
         if s.find_parents(['ul','ol']) == []: lists += 1
-
 
     return [imgs, headers, linkslen, lists]
 
