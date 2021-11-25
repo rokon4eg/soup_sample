@@ -33,8 +33,10 @@ def parse(path_to_file):
     h1_h6 = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
     for s in soup_div_bodyContent.find_all('img'):
         if int(s.get("width", 0)) > 199: imgs += 1
+    # imgs = len(body.find_all('img', width=lambda x: int(x or 0) > 199))
     for s in soup_div_bodyContent.find_all(h1_h6):
         if re.match('[ETC]', s.text): headers += 1
+        # if tag.get_text()[0] in "ETC"
 
     pass
     # не очень хороший способ -------------
@@ -58,6 +60,8 @@ def parse(path_to_file):
 
     for s in soup_div_bodyContent.find_all(['ul', 'ol']):
         if s.find_parents(['ul', 'ol']) == []: lists += 1
+    # lists = sum(
+    #     1 for tag in body.find_all(['ol', 'ul']) if not tag.find_parent(['ol', 'ul']))
 
     return [imgs, headers, linkslen, lists]
 
@@ -77,16 +81,21 @@ class TestParse(unittest.TestCase):
 
 
 def get_links(path, page):
-    links = []
-    with open(os.path.join(path, page), encoding="utf-8") as file:
-        all_links = re.findall(r"(?<=/wiki/)[\w()]+", file.read())
-        for link in all_links:
-            if (isfile(os.path.join(path, link))
-                    and (link not in links)
-                    # and (link != page)
-            ):
-                links.append(link)
-        return links
+    links = ()
+    # with open(os.path.join(path, page), encoding="utf-8") as file:
+    #     all_links = re.findall(r"(?<=/wiki/)[\w()]+", file.read())
+    #     for link in all_links:
+    #         if (isfile(os.path.join(path, link))
+    #                 and (link not in links)
+    #                 # and (link != page)
+    #         ):
+    #             links.append(link)
+    if isfile(os.path.join(path, page)):
+        with open(os.path.join(path, page), encoding="utf-8") as file:
+            links = set(re.findall(r"(?<=/wiki/)[\w()]+", file.read()))
+            if page in links:
+                links.remove(page)
+    return links
 
 
 def build_bridge(path, start_page, end_page):
@@ -114,16 +123,42 @@ def build_bridge(path, start_page, end_page):
                 if link not in links_viewed:
                     queue.append(link)
                     link_level.setdefault(link, link_level.get(page, [])+[link])
-    # print(link_level)
 
+def get_backlinks(path, end_page, unchecked_pages, checked_pages, backlinks):
+    """возвращает словарь обратных ссылок (ключ - страница, значение - страница
+    с которой возможен переход по ссылке на страницу, указанную в ключе)"""
 
-    #     matrix.setdefault(link, get_links(path, link))
-    # for m in matrix.items():
-    #     print(m)
-    # # short_path = get_links(path, page)
+    if end_page in checked_pages or not checked_pages:
+        return backlinks
 
-    # return short_path
+    new_checked_pages = set()
 
+    for checked_page in checked_pages:
+        unchecked_pages.remove(checked_page)
+        linked_pages = get_links(path, checked_page) & unchecked_pages
+
+        for linked_page in linked_pages:
+            backlinks[linked_page] = backlinks.get(linked_page, checked_page)
+            new_checked_pages.add(linked_page)
+
+    checked_pages = new_checked_pages & unchecked_pages
+
+    return get_backlinks(path, end_page, unchecked_pages, checked_pages, backlinks)
+
+def build_bridge1(path, start_page, end_page):
+    """возвращает список страниц, по которым можно перейти по ссылкам со start_page на
+    end_page, начальная и конечная страницы включаются в результирующий список"""
+
+    backlinks = \
+        get_backlinks(path, end_page, set(os.listdir(path)), {start_page, }, dict())
+    # print(backlinks)
+    current_page, bridge = end_page, [end_page]
+
+    while current_page != start_page:
+        current_page = backlinks.get(current_page)
+        bridge.append(current_page)
+    # print(bridge)
+    return bridge[::-1]
 
 def get_statistics(path, start_page, end_page):
     """собирает статистику со страниц, возвращает словарь, где ключ - название страницы,
@@ -142,8 +177,8 @@ if __name__ == '__main__':
     # time_start = datetime.datetime.now()
     # unittest.main()
     # print(parse('wiki/Stone_Age'))
-    print(build_bridge('wiki/', 'The_New_York_Times', 'Stone_Age'))
-    print(build_bridge('wiki/', 'Stone_Age', 'Stone_Age'))
+    print(build_bridge1('wiki/', 'The_New_York_Times', 'Stone_Age'))
+    print(build_bridge1('wiki/', 'Stone_Age', 'Stone_Age'))
     # print(result)
     # ['The_New_York_Times', 'London', 'Woolwich', 'Iron_Age', 'Stone_Age']
 
