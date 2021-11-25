@@ -95,6 +95,8 @@ def build_bridge(path, start_page, end_page):
 
     # напишите вашу реализацию логики по вычисления кратчайшего пути здесь
     # short_path = [start_page]
+    if end_page == start_page:
+        return [start_page]
     links_viewed = set()
     level = 0
     link_level = dict() # cсылка = путь
@@ -140,9 +142,9 @@ if __name__ == '__main__':
     # time_start = datetime.datetime.now()
     # unittest.main()
     # print(parse('wiki/Stone_Age'))
-    result = build_bridge('wiki/', 'The_New_York_Times', 'Stone_Age')
-    # result = build_bridge('wiki/', 'Stone_Age', 'Stone_Age')
-    print(result)
+    print(build_bridge('wiki/', 'The_New_York_Times', 'Stone_Age'))
+    print(build_bridge('wiki/', 'Stone_Age', 'Stone_Age'))
+    # print(result)
     # ['The_New_York_Times', 'London', 'Woolwich', 'Iron_Age', 'Stone_Age']
 
     result = get_statistics('wiki/', 'The_New_York_Times', "Binyamina_train_station_suicide_bombing")
