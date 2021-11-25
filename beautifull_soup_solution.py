@@ -83,7 +83,7 @@ def get_links(path, page):
         for link in all_links:
             if (isfile(os.path.join(path, link))
                     and (link not in links)
-                    and (link != page)
+                    # and (link != page)
             ):
                 links.append(link)
         return links
@@ -94,7 +94,7 @@ def build_bridge(path, start_page, end_page):
     end_page, начальная и конечная страницы включаются в результирующий список"""
 
     # напишите вашу реализацию логики по вычисления кратчайшего пути здесь
-    short_path = [start_page]
+    # short_path = [start_page]
     links_viewed = set()
     level = 0
     link_level = dict() # cсылка = путь
@@ -106,7 +106,7 @@ def build_bridge(path, start_page, end_page):
         # level = link_level.get(page, 0)
         links = get_links(path, page)
         if end_page in links:
-            return(link_level.get(page)+[end_page])
+            return(link_level.get(page, [])+[end_page])
         else:
             for link in links:
                 if link not in links_viewed:
@@ -120,7 +120,7 @@ def build_bridge(path, start_page, end_page):
     #     print(m)
     # # short_path = get_links(path, page)
 
-    return short_path
+    # return short_path
 
 
 def get_statistics(path, start_page, end_page):
@@ -141,6 +141,7 @@ if __name__ == '__main__':
     # unittest.main()
     # print(parse('wiki/Stone_Age'))
     result = build_bridge('wiki/', 'The_New_York_Times', 'Stone_Age')
+    # result = build_bridge('wiki/', 'Stone_Age', 'Stone_Age')
     print(result)
     # ['The_New_York_Times', 'London', 'Woolwich', 'Iron_Age', 'Stone_Age']
 
