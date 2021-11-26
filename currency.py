@@ -14,7 +14,16 @@ def convert(amount, cur_from, cur_to, date, requests):
         # print(currency)
         nominal = Decimal(currency.find_next_sibling('nominal').text)
         value = Decimal(currency.find_next_sibling('value').text.replace(',','.'))
-        result = round(amount * nominal / value,4)
+        result = Decimal(amount) * nominal / value
+        if cur_from == 'RUR':
+            return round(result, 4)
+        else:
+            currency = soup.find('charcode', text=cur_from)
+            # print(currency)
+            nominal = Decimal(currency.find_next_sibling('nominal').text)
+            value = Decimal(currency.find_next_sibling('value').text.replace(',', '.'))
+            return round(result*value/nominal,4)
+
     # Использовать переданный requests
     # ...
     # result = Decimal('3754.8057')
